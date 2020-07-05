@@ -1,0 +1,16 @@
+#Ignore the following:
+
+#'data' directory, containing LIP problem dependant data
+#'data' directory is created executing the 'data_file.py'
+/data
+
+#'TODOS.py' file, containg development TODOs list
+TODOS.py
+
+#'__pycache__' directory and its *.pyc bytecode files
+__pycachee__
+*.pyc
+
+#Ignore hidden files except for the '.gitignore' file
+.*
+!/.gitignore
