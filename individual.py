@@ -1,6 +1,4 @@
 from random import Random
-from functools import total_ordering
-
 
 '''
 TODO:
@@ -20,7 +18,6 @@ TODO:
 '''
 
 #Individual class
-@total_ordering
 class Individual:
     #Individual chromosome (key-value vector) size
     chromosome_size = 0
@@ -70,6 +67,9 @@ class Individual:
 
     def __ge__(self, other):
         return (self.quality >= other.quality)
+    
+    def __eq__(self, other):
+        return (self.quality == other.quality)
 
     #Set Individual static size variable
     @staticmethod

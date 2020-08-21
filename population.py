@@ -1,6 +1,7 @@
 import individual
 import utils
 from random import Random
+from collections.abc import Iterable
 
 '''
 TODO:
@@ -179,9 +180,33 @@ class Population:
         random_instance = Random()
         elite_individual = random_instance.choice(self.elite_individuals)
         non_elite_individual = random_instance.choice(self.non_elite_individuals)
-        new_chromosome = utils.parameterized_uniform_crossover(elite_individual.chromosome, non_elite_individual.chromosome, treshold)
+        new_chromosome = Population.parameterized_uniform_crossover(elite_individual.chromosome, non_elite_individual.chromosome, treshold)
         new_individual = individual.Individual(new_chromosome)
         return new_individual
+
+    #DONE
+    #Perform parameterized crossover among two list of the same size using a treshold for biasing
+    @staticmethod
+    def parameterized_uniform_crossover(first_list: list, second_list: list, treshold: int):
+        if not (isinstance(first_list, Iterable)):
+            raise TypeError("First provided argument, 'first_list', must be an iterable type. Provided argument is of type: {}.".format(type(first_list)))
+        elif not isinstance(second_list, Iterable):
+            raise TypeError("Second provided argument, 'second_list', must be an iterable type. Provided argument is of type: {}.".format(type(second_list)))
+        elif not (isinstance(treshold, float) or isinstance(treshold, int)):
+            raise TypeError("Third provided argument, 'treshold', must be numeric type ('float' or 'int'). Provided argument is of type: {}.".format(type(treshold)))
+        elif treshold < 0 or treshold > 1:
+            raise ValueError("Provided third argument, 'treshold', must be in between 0 an 1 [0.0, 1.0]. Value is: {}.".format(treshold))
+        elif len(first_list) != len(second_list):
+            raise ValueError("First two provided iterable arguments must both be of the same size. First argument is of size: {}. Second argument is of size: {}.".format(len(first_list), len(second_list)))
+        random_instance = Random()
+        result = list()
+        for i in range(len(first_list)):
+            random_value = random_instance.random()
+            if random_value < treshold:
+                result.append(first_list[i])
+            else:
+                result.append(second_list[i])
+        return result
 
     #DONE
     #Calculate avg fitness or quality of a population instance
@@ -213,7 +238,7 @@ class Population:
         if size_check:
             for individual in individuals:
                 if individual.chromosome_size != self.individual_size:
-                    raise AttributeError("Cannot add an individual of size {} in a population of individuals with size {}. Sizes must be the same.".format(individual.chromosome_size, self.individual_size))
+                    raise AttributeError("Sizes of all individuals to add to population must be the same as the the individuals in the population, i.e. {}. Individual with size {} was found in 'individuals' collection.".format(self.individual_size, individual.chromosome_size))
         if (len(self.individuals) + len(individuals)) > self.population_size:
             raise AttributeError("Cannot add a group of individuals to the population if the population size surpasses its maximum capacity after addition. Maximum population capacity: {}. Remaining space of population: {}. Amount of individuals to add to to the population: {}.".format(self.population_size,self.population_size - len(self.individuals) ,len(individuals)))
         else:
@@ -278,6 +303,8 @@ class Population:
         Population.elite_portion = float(elite_portion)
         Population.mutant_portion = float(mutant_portion)
     
+    #-------------------------Printers-------------------------
+
     #DONE
     #Auxiliary individuals pretty printer [AUXILIARY]
     def print_individuals(self):
@@ -351,6 +378,8 @@ def main():
     p.individuals[4].quality = 12
     p.print_individuals()
     p.sort_individuals()
+    p.print_individuals()
+    p.print_population()
     p.classify_population()
     p.print_population()
     child = p.crossover(0.7)

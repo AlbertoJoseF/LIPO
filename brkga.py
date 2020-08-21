@@ -1,3 +1,5 @@
+
+
 '''
 - MAIN or BRKGA LAYOUT:
     - ASK for user input arguments (g:generations, size: population size, )
@@ -22,3 +24,20 @@
 
 NOTE: CREATE separate script that creates the data files and calls the BRKGA main function
 '''
+
+def create_data():
+    
+
+def request_inputs():
+    pass
+
+def brkga(generations: int, elite_portion: float, mutant_portion: float, inheritance_probability: float, chromosome_size: int population_size = None):
+    pass
+
+#MAIN
+def main():
+
+
+
+if __name__ == '__main__':
+    main()

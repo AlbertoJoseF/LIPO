@@ -21,7 +21,7 @@ TODO LIST:
 """
 
 #---DONE---
-def create_entity(name: str, number: int, product_range: tuple, opening_cost_range: tuple, *directory_path: str):
+def create_entity(name: str, number: int, product_range: tuple, opening_cost_range: tuple, end_node: bool, *directory_path: str):
     """Creates an entity text file in the specified directory with the given entity (or facility type) data.
     
     Creates an entity text file (*.txt) with the given name and specified parameters for number of facilites, opening cost 
@@ -38,6 +38,7 @@ def create_entity(name: str, number: int, product_range: tuple, opening_cost_ran
         product_range: Ranges (Integer duple) used to define pseudo-randomly the amount products a facility can hold (i.e. 
             demand or capacity).
         opening_cost_range: Ranges (Float duple) used to define pseudo-randomly the opening cost for a given facility.
+        end_node: Flag specifying that the entity to create is an end node (or end client) in the entites graph (or supply chain).
         *directory_path: The directory path (String) were to create the entity text file. This parameter is optional. In case no
             directory_path argument is provided, the default value will be the './data' directory path.
 
@@ -67,10 +68,13 @@ def create_entity(name: str, number: int, product_range: tuple, opening_cost_ran
     path = 'data'
     if directory_path: #True if directory_path is passed as argument
         path = directory_path[0]
+    path = os.path.join(path, 'entities')
+    if end_node:
+        path = os.path.join(path, 'end_node')
     #File generation
     maximum_products = 0
     if not os.path.exists(path): #True if the directory were files are to be created doesn't exist.
-        os.mkdir(path)
+        os.makedirs(path)
     file_name = name + '.txt'
     with open(os.path.join(path, file_name), 'w') as entity_file:
         for i in range(number):
@@ -137,26 +141,38 @@ def define_transporation(*directory_path: str, **cost_ranges: dict):
     path = 'data'
     if directory_path: #True if directory_path is passed as argument
         path = directory_path[0]
-    #Diretory existence check
-        if not os.path.exists(path):
-            raise OSError("'{}' directory, which should contain the entity text files, hasn't been created. Make sure to create the directory with the appropriate files beforehand.".format('./' + path))
+    #Entities directory
+    entities_path = os.path.join(path, 'entities')
+    #Entities diretory existence check
+    if not os.path.exists(entities_path):
+        raise OSError("'{}' directory, which should contain the entity text files, hasn't been created. Make sure to create the directory with the appropriate files beforehand.".format('./' + entities_path))
+    path = os.path.join(path, 'transportation')
     #Argument validation for **cost_ranges
-    for key, value in cost_ranges.items():
-        full_path = os.path.join(path, key + '.txt')
-        if not (os.path.exists(full_path) and os.path.isfile(full_path)):
-            raise ValueError("No entity with the '{}' name matches any text file in the './{}' directory. A corresponding text file with '{}.txt' name should exist in the directory. Please check directory or entity names in passed arguments.".format(key, path, key))
-        elif value[0] > value[1]:
-            raise ValueError("In passed '**cost_ranges' argument (arg[1]), lower bound value must be smaller than upper bound value for the entity's cost range. Entity's cost range error was for '{}' -> {}.".format(key, value))
-        elif value[0] <= 0 or value[1] <= 0:
-            raise ValueError("In passed '**cost_ranges' argument (arg[1]), upper and lower bound of cost ranges must be greater than 0. Entity's cost range error was for '{}' -> {}.".format(key, value))
+    for count, (key, value) in enumerate(cost_ranges.items(), start = 1):
+        if count == len(cost_ranges):
+            entity_full_path = os.path.join(entities_path, 'end_node', key + '.txt')
+        else:
+            entity_full_path = os.path.join(entities_path, key + '.txt')
+        if not (os.path.exists(entity_full_path) and os.path.isfile(entity_full_path)):
+            raise ValueError("No entity with the '{}' name matches any text file in the './{}' directory. A corresponding text file with '{}.txt' name should exist in the directory. Please check directory or entity names in passed arguments.".format(key, entities_path, key))
+        elif count != len(cost_ranges):
+            if value[0] > value[1]:
+                raise ValueError("In passed '**cost_ranges' argument (arg[1]), lower bound value must be smaller than upper bound value for the entity's cost range. Entity's cost range error was for '{}' -> {}.".format(key, value))
+            elif value[0] <= 0 or value[1] <= 0:
+                raise ValueError("In passed '**cost_ranges' argument (arg[1]), upper and lower bound of cost ranges must be greater than 0. Entity's cost range error was for '{}' -> {}.".format(key, value))
     #File generation
+    if not os.path.exists(path):
+        os.makedirs(path)
     try:
         transportation_file = open(os.path.join(path, 'transportation.txt'), 'w')
     except(FileNotFoundError):
-        raise OSError("'{}' directory, which should contain the entity text files, hasn't been created. Make sure to create the directory with the appropriate files beforehand.".format('./' + path))
+        raise OSError("File 'transportation.txt', could not be created in the '{}' directory.".format('./' + path))
     entities = list()
-    for entity in cost_ranges:
-        entities.append((entity, count_lines(entity + '.txt')))
+    for index, entity in enumerate(cost_ranges, start = 1):
+        if index == len(cost_ranges):
+            entities.append((entity, count_lines(entity + '.txt', os.path.join(entities_path, 'end_node'))))
+        else:
+            entities.append((entity, count_lines(entity + '.txt', entities_path)))
     #Example of resulting entities list after previous for loop: [('entity1', 3), ('entity2', 2), ('entity3', 5)]
     count = 0
     for entity1, number1 in entities:
@@ -197,14 +213,14 @@ def count_lines(file_name: str, *directory_path: str):
     if directory_path and (len(directory_path) > 1 or not isinstance(directory_path[0], str)):
         raise TypeError("Passed 'directory_path' argument (arg[4]) is not valid. Only a single String argument is needed if passed. {} was provided as argument.".format(directory_path))
     #Default directory path
-    path = 'data'
+    path = ''
     if directory_path: #True if directory_path is passed as argument
         path = directory_path[0]
     #Try and open file with the specified directory path and file name
     try:
         file = open(os.path.join(path, file_name), 'r')
     except(FileNotFoundError):
-        raise OSError("File with name '{}' could not be found in the {} directory. Please check the passed file name and directory path".format(file_name, path))
+        raise OSError("File with name '{}' could not be found in the './{}' directory. Please check the passed file name and directory path".format(file_name, path))
     count = 0
     for line in file:
         count += 1
@@ -281,11 +297,11 @@ def main():
     entity1 = 'plant'
     entity2 = 'depot'
     entity3 = 'client'
-    print(create_entity(entity1, 4, (23, 34), (12.2, 33.5)))
-    print(create_entity(entity2, 2, (23, 34), (12.2, 33.5)))
-    print(create_entity(entity3, 3, (23, 34), (12.2, 33.5)))
-
-    define_transporation(plant = (21.3, 123.23), depot = (38.3, 340.3), client = (0,0))
+    print(create_entity(entity1, 7, (23, 34), (12.2, 33.5), False))
+    print(create_entity(entity2, 4, (23, 34), (12.2, 33.5), False))
+    print(create_entity(entity3, 3, (23, 34), (12.2, 33.5), True))
+    
+    define_transporation(plant = (21.3, 123.23), depot = (38.3, 340.3), client = (0, 0))
     '''
     transportation_costs = {entity1: (21.3, 123.23), entity2: (38.3, 340.3), entity3: None} 
     define_transporation(**transportation_costs)
