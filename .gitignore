@@ -8,7 +8,7 @@
 TODOS.py
 
 #'__pycache__' directory and its *.pyc bytecode files
-__pycachee__
+__pycache__
 *.pyc
 
 #Ignore hidden files except for the '.gitignore' file

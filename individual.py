@@ -34,7 +34,7 @@ class Individual:
         self.chromosome_size = 0
         
         #Quality of individual
-        self.quality = 0 
+        self.quality = None 
 
         #Set static Class size variable if provided in constructor call (*size)
         if len(arg) > 1:

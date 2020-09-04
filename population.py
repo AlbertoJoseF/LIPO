@@ -124,7 +124,7 @@ class Population:
             self.individual_size = Population.individual_size
 
     #DONE
-    #Terrible description: Create Population of 'size' number of random Individual instances
+    #Create Population of a specific (population_size) number of random Individual instances
     def create_random_population(self, *portion: tuple):
         amount = self.population_size
         #If the amount parameter 'arg' is passed in...
@@ -215,6 +215,15 @@ class Population:
         for individual in self.individuals:
             average += individual.quality
         return (average / self.population_size)
+    
+    #DONE
+    #Calculate avg fitness or quality of a population's elite individuals
+    def get_average_elite_fitness(self):
+        average = 0.0
+        for individual in self.elite_individuals:
+            average += individual.quality
+        return (average / len(self.elite_individuals))
+
 
     #DONE
     #Returns the fittest individual based on the Individual quality attribute
@@ -385,6 +394,7 @@ def main():
     child = p.crossover(0.7)
     print(child.chromosome)
     print(p.get_average_fitness())
+    print(p.get_average_elite_fitness())
     fittest = p.get_fittest_individual()
     fittest.print_individual()
     
